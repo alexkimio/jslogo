@@ -166,45 +166,46 @@
 
     /* Color picker */
     .color-row {
-      position: relative;
       display: flex;
       align-items: center;
       gap: 10px;
-      background: var(--surface);
-      border: 1px solid var(--border-mid);
-      padding: 9px 12px;
-      cursor: pointer;
-      transition: border-color 0.12s;
       width: 100%;
     }
 
-    .color-row:focus-within {
-      border-color: var(--accent);
+    .swatch-wrap {
+      position: relative;
+      flex-shrink: 0;
+      cursor: pointer;
     }
 
     .swatch {
       width: 22px;
       height: 22px;
       border: 1px solid rgba(255,255,255,0.08);
-      flex-shrink: 0;
-      transition: border-color 0.12s;
-    }
-
-    .hex-value {
-      flex: 1;
-      font-size: 12px;
-      letter-spacing: 0.06em;
-      color: var(--text);
-      pointer-events: none;
+      display: block;
     }
 
     input[type="color"] {
       position: absolute;
       opacity: 0;
-      width: 1px;
-      height: 1px;
-      top: 0;
-      left: 0;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .hex-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: var(--font);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      color: var(--text);
+      caret-color: var(--accent);
+      padding: 0;
+      min-width: 0;
     }
 
     /* Slider */
@@ -376,8 +377,13 @@
       width: 100%;
       cursor: pointer;
       transition: opacity 0.15s, transform 0.1s;
-      position: relative;
+      position: sticky;
+      bottom: 0;
       overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
     }
 
     .download-btn::before {
@@ -412,7 +418,6 @@
       position: relative;
     }
 
-    /* Crosshair corner marks */
     .canvas-frame::before,
     .canvas-frame::after {
       content: '';
@@ -492,27 +497,105 @@
 
     /* ─── Responsive ─── */
     @media (max-width: 680px) {
+      header {
+        padding: 12px 16px;
+      }
+
+      body {
+        overflow: hidden;
+        height: 100vh;
+      }
+
       main {
         grid-template-columns: 1fr;
         grid-template-rows: auto 1fr;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
       }
 
+      /* Preview at top, always visible */
+      .preview-area {
+        order: -1;
+        padding: 20px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      #preview {
+        max-width: min(220px, 64vw);
+        max-height: min(220px, 64vw);
+      }
+
+      .canvas-meta {
+        gap: 10px;
+      }
+
+      /* Controls scroll inside */
       .controls {
         border-right: none;
-        border-bottom: 1px solid var(--border);
+        overflow-y: auto;
+        min-height: 0;
+        padding: 20px 16px 36px;
         gap: 18px;
-        padding: 20px 18px;
       }
 
       .spacer { display: none; }
 
-      .preview-area {
-        padding: 32px 20px;
+      /* Bigger touch target for slider */
+      input[type="range"] {
+        height: 3px;
+        margin: 14px 0 6px;
       }
 
+      input[type="range"]::-webkit-slider-thumb {
+        width: 22px;
+        height: 22px;
+      }
+
+      input[type="range"]::-moz-range-thumb {
+        width: 22px;
+        height: 22px;
+        border-radius: 0;
+      }
+
+      .random-btn {
+        padding: 8px 12px;
+        touch-action: manipulation;
+      }
+
+      .swatch-wrap .swatch {
+        width: 28px;
+        height: 28px;
+      }
+
+      .color-chip:hover,
+      .preset-chip:hover {
+        transform: none;
+      }
+
+      .download-btn {
+        padding: 20px;
+        font-size: 11px;
+        touch-action: manipulation;
+      }
+    }
+
+    @media (max-width: 380px) {
       #preview {
-        max-width: min(280px, 80vw);
-        max-height: min(280px, 80vw);
+        max-width: min(190px, 60vw);
+        max-height: min(190px, 60vw);
+      }
+
+      input[type="text"] {
+        font-size: 18px;
+      }
+
+      .color-palettes-grid {
+        gap: 3px;
+      }
+
+      .presets-grid {
+        gap: 4px;
       }
     }
   </style>
@@ -524,7 +607,7 @@
     <div class="js-badge"><span>JS</span></div>
     <h1>Logo&nbsp;Generator</h1>
   </div>
-  <span class="version">v1.0.0</span>
+  <span class="version">v1.1.0</span>
 </header>
 
 <main>
@@ -564,20 +647,24 @@
 
     <div class="control-group">
       <span class="control-label">Background</span>
-      <label class="color-row" id="bg-label">
-        <div class="swatch" id="bg-swatch" style="background:#F7DF1E;"></div>
-        <span class="hex-value" id="bg-hex">#F7DF1E</span>
-        <input type="color" id="bg-color" value="#F7DF1E">
-      </label>
+      <div class="color-row">
+        <label class="swatch-wrap">
+          <div class="swatch" id="bg-swatch" style="background:#F7DF1E;"></div>
+          <input type="color" id="bg-color" value="#F7DF1E">
+        </label>
+        <input type="text" class="hex-input" id="bg-hex" value="#F7DF1E" maxlength="7" spellcheck="false" autocomplete="off">
+      </div>
     </div>
 
     <div class="control-group">
       <span class="control-label">Text Color</span>
-      <label class="color-row" id="fg-label">
-        <div class="swatch" id="fg-swatch" style="background:#000000;"></div>
-        <span class="hex-value" id="fg-hex">#000000</span>
-        <input type="color" id="fg-color" value="#000000">
-      </label>
+      <div class="color-row">
+        <label class="swatch-wrap">
+          <div class="swatch" id="fg-swatch" style="background:#000000;"></div>
+          <input type="color" id="fg-color" value="#000000">
+        </label>
+        <input type="text" class="hex-input" id="fg-hex" value="#000000" maxlength="7" spellcheck="false" autocomplete="off">
+      </div>
     </div>
 
     <div class="sep"></div>
@@ -700,12 +787,27 @@
     fontLabel.textContent = `${fontPct}%`;
 
     bgSwatch.style.background = bg;
-    bgHex.textContent = bg.toUpperCase();
+    if (document.activeElement !== bgHex) bgHex.value = bg.toUpperCase();
     fgSwatch.style.background = fg;
-    fgHex.textContent = fg.toUpperCase();
+    if (document.activeElement !== fgHex) fgHex.value = fg.toUpperCase();
 
     renderLogo(text, bg, fg, fontPct);
   }
+
+  function applyHex(input, colorInput) {
+    const val = input.value.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+      colorInput.value = val;
+      if (activeChip) activeChip.classList.remove('active');
+      activeChip = null;
+      if (activeColorChip) activeColorChip.classList.remove('active');
+      activeColorChip = null;
+      update();
+    }
+  }
+
+  bgHex.addEventListener('input', () => applyHex(bgHex, bgColor));
+  fgHex.addEventListener('input', () => applyHex(fgHex, fgColor));
 
   // Build color palette chips
   const colorPresetsGrid = document.getElementById('color-palettes-grid');
