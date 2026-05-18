@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JS Logo Generator</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #080808;
+      --surface: #111111;
+      --border: #1e1e1e;
+      --border-mid: #2a2a2a;
+      --text: #d8d8d8;
+      --muted: #4a4a4a;
+      --accent: #F7DF1E;
+      --font: ui-monospace, 'Cascadia Code', 'JetBrains Mono', 'Fira Code', Menlo, 'Courier New', monospace;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      line-height: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, #1a1a1a 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── Header ─── */
+    header {
+      position: relative;
+      z-index: 1;
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(8,8,8,0.8);
+      backdrop-filter: blur(8px);
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .js-badge {
+      width: 26px;
+      height: 26px;
+      background: var(--accent);
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      padding: 2px 3px;
+      flex-shrink: 0;
+    }
+
+    .js-badge span {
+      font-size: 9px;
+      font-weight: 700;
+      color: #000;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    h1 {
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .version {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    /* ─── Layout ─── */
+    main {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: grid;
+      grid-template-columns: 288px 1fr;
+      min-height: 0;
+    }
+
+    /* ─── Controls ─── */
+    .controls {
+      border-right: 1px solid var(--border);
+      padding: 28px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      overflow-y: auto;
+      background: rgba(8,8,8,0.5);
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .control-label {
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    /* Text input */
+    input[type="text"] {
+      background: var(--surface);
+      border: 1px solid var(--border-mid);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 11px 14px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.12s;
+      caret-color: var(--accent);
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+
+    /* Color picker */
+    .color-row {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border-mid);
+      padding: 9px 12px;
+      cursor: pointer;
+      transition: border-color 0.12s;
+      width: 100%;
+    }
+
+    .color-row:focus-within {
+      border-color: var(--accent);
+    }
+
+    .swatch {
+      width: 22px;
+      height: 22px;
+      border: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+      transition: border-color 0.12s;
+    }
+
+    .hex-value {
+      flex: 1;
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      color: var(--text);
+      pointer-events: none;
+    }
+
+    input[type="color"] {
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+      top: 0;
+      left: 0;
+    }
+
+    /* Slider */
+    .slider-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+
+    .slider-value {
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: 0.04em;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 1px;
+      background: var(--border-mid);
+      outline: none;
+      cursor: pointer;
+      margin: 8px 0 4px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 13px;
+      height: 13px;
+      background: var(--accent);
+      cursor: pointer;
+      border: none;
+      transition: transform 0.1s;
+    }
+
+    input[type="range"]:active::-webkit-slider-thumb {
+      transform: scale(1.2);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 13px;
+      height: 13px;
+      background: var(--accent);
+      cursor: pointer;
+      border: none;
+      border-radius: 0;
+    }
+
+    .slider-ends {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    /* Separator */
+    .sep {
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Download */
+    .spacer { flex: 1; }
+
+    .download-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      font-family: var(--font);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      padding: 14px;
+      width: 100%;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .download-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.1);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .download-btn:hover::before { opacity: 1; }
+    .download-btn:active { transform: scale(0.98); }
+
+    /* ─── Preview area ─── */
+    .preview-area {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 40px;
+      position: relative;
+    }
+
+    .canvas-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .canvas-frame {
+      position: relative;
+    }
+
+    /* Crosshair corner marks */
+    .canvas-frame::before,
+    .canvas-frame::after {
+      content: '';
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-color: var(--border-mid);
+      border-style: solid;
+    }
+
+    .canvas-frame::before {
+      top: -5px;
+      left: -5px;
+      border-width: 1px 0 0 1px;
+    }
+
+    .canvas-frame::after {
+      bottom: -5px;
+      right: -5px;
+      border-width: 0 1px 1px 0;
+    }
+
+    .inner-frame {
+      position: relative;
+    }
+
+    .inner-frame::before,
+    .inner-frame::after {
+      content: '';
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-color: var(--border-mid);
+      border-style: solid;
+    }
+
+    .inner-frame::before {
+      top: -5px;
+      right: -5px;
+      border-width: 1px 1px 0 0;
+    }
+
+    .inner-frame::after {
+      bottom: -5px;
+      left: -5px;
+      border-width: 0 0 1px 1px;
+    }
+
+    #preview {
+      display: block;
+      max-width: min(380px, 60vw);
+      max-height: min(380px, 60vw);
+      width: auto;
+      height: auto;
+      box-shadow:
+        0 0 0 1px var(--border),
+        0 20px 60px rgba(0,0,0,0.7),
+        0 4px 16px rgba(0,0,0,0.5);
+    }
+
+    .canvas-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    .meta-dot {
+      width: 3px;
+      height: 3px;
+      background: var(--accent);
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 680px) {
+      main {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+      }
+
+      .controls {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        gap: 18px;
+        padding: 20px 18px;
+      }
+
+      .spacer { display: none; }
+
+      .preview-area {
+        padding: 32px 20px;
+      }
+
+      #preview {
+        max-width: min(280px, 80vw);
+        max-height: min(280px, 80vw);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="title-group">
+    <div class="js-badge"><span>JS</span></div>
+    <h1>Logo&nbsp;Generator</h1>
+  </div>
+  <span class="version">v1.0.0</span>
+</header>
+
+<main>
+  <div class="controls">
+
+    <div class="control-group">
+      <span class="control-label">Text</span>
+      <input
+        type="text"
+        id="text"
+        value="JS"
+        maxlength="4"
+        spellcheck="false"
+        autocomplete="off"
+        placeholder="JS"
+      >
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="control-group">
+      <span class="control-label">Background</span>
+      <label class="color-row" id="bg-label">
+        <div class="swatch" id="bg-swatch" style="background:#F7DF1E;"></div>
+        <span class="hex-value" id="bg-hex">#F7DF1E</span>
+        <input type="color" id="bg-color" value="#F7DF1E">
+      </label>
+    </div>
+
+    <div class="control-group">
+      <span class="control-label">Text Color</span>
+      <label class="color-row" id="fg-label">
+        <div class="swatch" id="fg-swatch" style="background:#000000;"></div>
+        <span class="hex-value" id="fg-hex">#000000</span>
+        <input type="color" id="fg-color" value="#000000">
+      </label>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="control-group">
+      <div class="slider-header">
+        <span class="control-label">Font Size</span>
+        <span class="slider-value" id="font-label">55%</span>
+      </div>
+      <input type="range" id="font-size" min="20" max="85" value="55" step="1">
+      <div class="slider-ends">
+        <span>20%</span>
+        <span>85%</span>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <button class="download-btn" id="download">↓&nbsp;&nbsp;Download PNG</button>
+
+  </div>
+
+  <div class="preview-area">
+    <div class="canvas-stack">
+      <div class="canvas-frame">
+        <div class="inner-frame">
+          <canvas id="preview" width="256" height="256"></canvas>
+        </div>
+      </div>
+      <div class="canvas-meta">
+        <span><span class="meta-dot"></span>PNG</span>
+        <span id="meta-dim">256 × 256 px</span>
+        <span>sRGB</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const SIZE = 512;
+
+  const canvas     = document.getElementById('preview');
+  const ctx        = canvas.getContext('2d');
+  const textEl     = document.getElementById('text');
+  const bgColor    = document.getElementById('bg-color');
+  const fgColor    = document.getElementById('fg-color');
+  const fontSizeEl = document.getElementById('font-size');
+  const fontLabel  = document.getElementById('font-label');
+  const metaDim    = document.getElementById('meta-dim');
+  const bgSwatch   = document.getElementById('bg-swatch');
+  const bgHex      = document.getElementById('bg-hex');
+  const fgSwatch   = document.getElementById('fg-swatch');
+  const fgHex      = document.getElementById('fg-hex');
+  const dlBtn      = document.getElementById('download');
+
+  canvas.width  = SIZE;
+  canvas.height = SIZE;
+  metaDim.textContent = `${SIZE} × ${SIZE} px`;
+
+  function renderLogo(text, bg, fg, fontPct) {
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, SIZE, SIZE);
+
+    const fontSize = Math.floor(SIZE * fontPct / 100);
+    const pad      = Math.floor(SIZE * 0.08);
+
+    ctx.fillStyle    = fg;
+    ctx.font         = `bold ${fontSize}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
+    ctx.textAlign    = 'right';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(text || 'JS', SIZE - pad, SIZE - pad);
+  }
+
+  function update() {
+    const text    = textEl.value || 'JS';
+    const bg      = bgColor.value;
+    const fg      = fgColor.value;
+    const fontPct = parseInt(fontSizeEl.value, 10);
+
+    fontLabel.textContent = `${fontPct}%`;
+
+    bgSwatch.style.background = bg;
+    bgHex.textContent = bg.toUpperCase();
+    fgSwatch.style.background = fg;
+    fgHex.textContent = fg.toUpperCase();
+
+    renderLogo(text, bg, fg, fontPct);
+  }
+
+  [textEl, bgColor, fgColor, fontSizeEl].forEach(el => el.addEventListener('input', update));
+
+  dlBtn.addEventListener('click', () => {
+    const name = (textEl.value || 'js').toLowerCase().replace(/\s+/g, '-');
+    const a = document.createElement('a');
+    a.download = `${name}-logo.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  });
+
+  update();
+</script>
+
+</body>
+</html>
