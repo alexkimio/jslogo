@@ -607,7 +607,7 @@
     <div class="js-badge"><span>JS</span></div>
     <h1>Logo&nbsp;Generator</h1>
   </div>
-  <span class="version">v1.1.0</span>
+  <span class="version">v1.1.1</span>
 </header>
 
 <main>
@@ -646,7 +646,10 @@
     <div class="sep"></div>
 
     <div class="control-group">
-      <span class="control-label">Background</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span class="control-label">Background</span>
+        <button class="random-btn" id="swap-btn">⇅ Swap</button>
+      </div>
       <div class="color-row">
         <label class="swatch-wrap">
           <div class="swatch" id="bg-swatch" style="background:#F7DF1E;"></div>
@@ -654,9 +657,6 @@
         </label>
         <input type="text" class="hex-input" id="bg-hex" value="#F7DF1E" maxlength="7" spellcheck="false" autocomplete="off">
       </div>
-    </div>
-
-    <div class="control-group">
       <span class="control-label">Text Color</span>
       <div class="color-row">
         <label class="swatch-wrap">
@@ -901,6 +901,17 @@
     activeColorChip = null;
     if (activeChip) activeChip.classList.remove('active');
     activeChip = null;
+    update();
+  });
+
+  document.getElementById('swap-btn').addEventListener('click', () => {
+    const tmp = bgColor.value;
+    bgColor.value = fgColor.value;
+    fgColor.value = tmp;
+    if (activeChip) activeChip.classList.remove('active');
+    activeChip = null;
+    if (activeColorChip) activeColorChip.classList.remove('active');
+    activeColorChip = null;
     update();
   });
 
