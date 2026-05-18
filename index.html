@@ -252,6 +252,42 @@
       letter-spacing: 0.04em;
     }
 
+    /* Presets */
+    .presets-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+    }
+
+    .preset-chip {
+      container-type: inline-size;
+      aspect-ratio: 1;
+      position: relative;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: border-color 0.12s, transform 0.1s;
+      overflow: hidden;
+    }
+
+    .preset-chip:hover {
+      transform: scale(1.06);
+    }
+
+    .preset-chip.active {
+      border-color: var(--accent);
+    }
+
+    .preset-chip-text {
+      position: absolute;
+      bottom: 8cqi;
+      right: 8cqi;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-weight: 700;
+      font-size: 40cqi;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
     /* Separator */
     .sep {
       height: 1px;
@@ -429,6 +465,13 @@
   <div class="controls">
 
     <div class="control-group">
+      <span class="control-label">Presets</span>
+      <div class="presets-grid" id="presets-grid"></div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="control-group">
       <span class="control-label">Text</span>
       <input
         type="text"
@@ -500,6 +543,17 @@
 <script>
   const SIZE = 512;
 
+  const PRESETS = [
+    { name: 'JavaScript', text: 'JS',  bg: '#F7DF1E', fg: '#000000' },
+    { name: 'TypeScript', text: 'TS',  bg: '#3178C6', fg: '#FFFFFF' },
+    { name: 'Go',         text: 'GO',  bg: '#00ADD8', fg: '#FFFFFF' },
+    { name: 'C#',         text: 'C#',   bg: '#512BD4', fg: '#FFFFFF' },
+    { name: 'CSS',        text: 'CSS',  bg: '#264DE4', fg: '#FFFFFF' },
+    { name: 'HTML',       text: 'HTML', bg: '#E34F26', fg: '#FFFFFF' },
+    { name: 'PHP',        text: 'PHP',  bg: '#777BB4', fg: '#FFFFFF' },
+    { name: 'Java',       text: 'JAVA', bg: '#ED8B00', fg: '#FFFFFF' },
+  ];
+
   const canvas     = document.getElementById('preview');
   const ctx        = canvas.getContext('2d');
   const textEl     = document.getElementById('text');
@@ -522,14 +576,21 @@
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, SIZE, SIZE);
 
-    const fontSize = Math.floor(SIZE * fontPct / 100);
-    const pad      = Math.floor(SIZE * 0.08);
+    const t      = text || 'JS';
+    const pad    = Math.floor(SIZE * 0.08);
+    const maxW   = SIZE - 2 * pad;
+    let fontSize = Math.floor(SIZE * fontPct / 100 * 2 / Math.max(t.length, 2));
 
-    ctx.fillStyle    = fg;
-    ctx.font         = `bold ${fontSize}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
+    ctx.fillStyle = fg;
+    ctx.font = `bold ${fontSize}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
+    while (ctx.measureText(t).width > maxW && fontSize > 10) {
+      fontSize -= 2;
+      ctx.font = `bold ${fontSize}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
+    }
+
     ctx.textAlign    = 'right';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(text || 'JS', SIZE - pad, SIZE - pad);
+    ctx.fillText(t, SIZE - pad, SIZE - pad);
   }
 
   function update() {
@@ -547,6 +608,38 @@
 
     renderLogo(text, bg, fg, fontPct);
   }
+
+  // Build preset chips
+  const presetsGrid = document.getElementById('presets-grid');
+  let activeChip = null;
+
+  PRESETS.forEach((preset, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'preset-chip' + (i === 0 ? ' active' : '');
+    chip.title = preset.name;
+    chip.style.background = preset.bg;
+    const chipFontSize = preset.text.length >= 3 ? '26cqi' : '40cqi';
+    chip.innerHTML = `<span class="preset-chip-text" style="color:${preset.fg};font-size:${chipFontSize}">${preset.text}</span>`;
+
+    chip.addEventListener('click', () => {
+      textEl.value = preset.text;
+      bgColor.value = preset.bg;
+      fgColor.value = preset.fg;
+      if (activeChip) activeChip.classList.remove('active');
+      chip.classList.add('active');
+      activeChip = chip;
+      update();
+    });
+
+    presetsGrid.appendChild(chip);
+    if (i === 0) activeChip = chip;
+  });
+
+  // Deactivate preset chip on manual edit
+  [textEl, bgColor, fgColor].forEach(el => el.addEventListener('input', () => {
+    if (activeChip) activeChip.classList.remove('active');
+    activeChip = null;
+  }));
 
   [textEl, bgColor, fgColor, fontSizeEl].forEach(el => el.addEventListener('input', update));
 

@@ -13,14 +13,21 @@ function renderLogo(canvas: HTMLCanvasElement, { text, bgColor, textColor, fontP
   ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, SIZE, SIZE);
 
-  const fontSize = Math.floor(SIZE * fontPct / 100);
-  const pad = Math.floor(SIZE * 0.08);
+  const t    = text || 'JS';
+  const pad  = Math.floor(SIZE * 0.08);
+  const maxW = SIZE - 2 * pad;
+  let fontSize = Math.floor(SIZE * fontPct / 100 * 2 / Math.max(t.length, 2));
 
   ctx.fillStyle = textColor;
   ctx.font = `bold ${fontSize}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
+  while (ctx.measureText(t).width > maxW && fontSize > 10) {
+    fontSize -= 2;
+    ctx.font = `bold ${fontSize}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
+  }
+
   ctx.textAlign = 'right';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText(text || 'JS', SIZE - pad, SIZE - pad);
+  ctx.fillText(t, SIZE - pad, SIZE - pad);
 }
 
 function downloadLogo(canvas: HTMLCanvasElement, filename: string): void {
