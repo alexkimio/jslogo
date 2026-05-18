@@ -252,6 +252,72 @@
       letter-spacing: 0.04em;
     }
 
+    /* Color palettes */
+    .color-palettes-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 4px;
+    }
+
+    .color-chip {
+      aspect-ratio: 1;
+      position: relative;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: border-color 0.12s, transform 0.1s;
+      overflow: hidden;
+    }
+
+    .color-chip:hover {
+      transform: scale(1.12);
+    }
+
+    .color-chip.active {
+      border-color: rgba(255,255,255,0.7);
+    }
+
+    .color-chip-fg {
+      position: absolute;
+      inset: 0;
+      clip-path: polygon(100% 35%, 100% 100%, 35% 100%);
+    }
+
+    /* Language presets */
+    .presets-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+    }
+
+    .preset-chip {
+      container-type: inline-size;
+      aspect-ratio: 1;
+      position: relative;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: border-color 0.12s, transform 0.1s;
+      overflow: hidden;
+    }
+
+    .preset-chip:hover {
+      transform: scale(1.06);
+    }
+
+    .preset-chip.active {
+      border-color: var(--accent);
+    }
+
+    .preset-chip-text {
+      position: absolute;
+      bottom: 8cqi;
+      right: 8cqi;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-weight: 700;
+      font-size: 40cqi;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
     /* Separator */
     .sep {
       height: 1px;
@@ -429,6 +495,20 @@
   <div class="controls">
 
     <div class="control-group">
+      <span class="control-label">Colors</span>
+      <div class="color-palettes-grid" id="color-palettes-grid"></div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="control-group">
+      <span class="control-label">Languages</span>
+      <div class="presets-grid" id="presets-grid"></div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="control-group">
       <span class="control-label">Text</span>
       <input
         type="text"
@@ -500,6 +580,38 @@
 <script>
   const SIZE = 512;
 
+  const COLOR_PRESETS = [
+    { name: 'JS Classic',   bg: '#F7DF1E', fg: '#000000' },
+    { name: 'Neon Green',   bg: '#0A0A0A', fg: '#39FF14' },
+    { name: 'Crimson',      bg: '#C0392B', fg: '#FFFFFF' },
+    { name: 'Ocean',        bg: '#0077B6', fg: '#CAF0F8' },
+    { name: 'Forest',       bg: '#1B4332', fg: '#95D5B2' },
+    { name: 'Sunset',       bg: '#FF6348', fg: '#FFFFFF' },
+    { name: 'Lavender',     bg: '#6C63FF', fg: '#FFFFFF' },
+    { name: 'Slate',        bg: '#1E293B', fg: '#94A3B8' },
+    { name: 'Amber',        bg: '#F59E0B', fg: '#1C1917' },
+    { name: 'Teal',         bg: '#0F766E', fg: '#CCFBF1' },
+    { name: 'Dusk',         bg: '#2D1B69', fg: '#A78BFA' },
+    { name: 'Carbon',       bg: '#1C1C1C', fg: '#FFFFFF' },
+    { name: 'Coral',        bg: '#FF6B6B', fg: '#1A1A1A' },
+    { name: 'Mint',         bg: '#ECFDF5', fg: '#065F46' },
+    { name: 'Rose Gold',    bg: '#B76E79', fg: '#FFF0F3' },
+    { name: 'Copper',       bg: '#8B4513', fg: '#FFD700' },
+    { name: 'Midnight',     bg: '#0D1B2A', fg: '#E0E0E0' },
+    { name: 'Cherry',       bg: '#880E4F', fg: '#FCE4EC' },
+  ];
+
+  const PRESETS = [
+    { name: 'JavaScript', text: 'JS',  bg: '#F7DF1E', fg: '#000000' },
+    { name: 'TypeScript', text: 'TS',  bg: '#3178C6', fg: '#FFFFFF' },
+    { name: 'Go',         text: 'GO',  bg: '#00ADD8', fg: '#FFFFFF' },
+    { name: 'C#',         text: 'C#',   bg: '#512BD4', fg: '#FFFFFF' },
+    { name: 'CSS',        text: 'CSS',  bg: '#264DE4', fg: '#FFFFFF' },
+    { name: 'HTML',       text: 'HTML', bg: '#E34F26', fg: '#FFFFFF' },
+    { name: 'PHP',        text: 'PHP',  bg: '#777BB4', fg: '#FFFFFF' },
+    { name: 'Java',       text: 'JAVA', bg: '#ED8B00', fg: '#FFFFFF' },
+  ];
+
   const canvas     = document.getElementById('preview');
   const ctx        = canvas.getContext('2d');
   const textEl     = document.getElementById('text');
@@ -522,14 +634,21 @@
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, SIZE, SIZE);
 
-    const fontSize = Math.floor(SIZE * fontPct / 100);
-    const pad      = Math.floor(SIZE * 0.08);
+    const t      = text || 'JS';
+    const pad    = Math.floor(SIZE * 0.08);
+    const maxW   = SIZE - 2 * pad;
+    let fontSize = Math.floor(SIZE * fontPct / 100 * 2 / Math.max(t.length, 2));
 
-    ctx.fillStyle    = fg;
-    ctx.font         = `bold ${fontSize}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
+    ctx.fillStyle = fg;
+    ctx.font = `bold ${fontSize}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
+    while (ctx.measureText(t).width > maxW && fontSize > 10) {
+      fontSize -= 2;
+      ctx.font = `bold ${fontSize}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
+    }
+
     ctx.textAlign    = 'right';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(text || 'JS', SIZE - pad, SIZE - pad);
+    ctx.fillText(t, SIZE - pad, SIZE - pad);
   }
 
   function update() {
@@ -547,6 +666,67 @@
 
     renderLogo(text, bg, fg, fontPct);
   }
+
+  // Build color palette chips
+  const colorPresetsGrid = document.getElementById('color-palettes-grid');
+  let activeColorChip = null;
+
+  COLOR_PRESETS.forEach(palette => {
+    const chip = document.createElement('div');
+    chip.className = 'color-chip';
+    chip.title = palette.name;
+    chip.style.background = palette.bg;
+    chip.innerHTML = `<div class="color-chip-fg" style="background:${palette.fg}"></div>`;
+
+    chip.addEventListener('click', () => {
+      bgColor.value = palette.bg;
+      fgColor.value = palette.fg;
+      if (activeColorChip) activeColorChip.classList.remove('active');
+      chip.classList.add('active');
+      activeColorChip = chip;
+      if (activeChip) activeChip.classList.remove('active');
+      activeChip = null;
+      update();
+    });
+
+    colorPresetsGrid.appendChild(chip);
+  });
+
+  // Build language preset chips
+  const presetsGrid = document.getElementById('presets-grid');
+  let activeChip = null;
+
+  PRESETS.forEach((preset, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'preset-chip' + (i === 0 ? ' active' : '');
+    chip.title = preset.name;
+    chip.style.background = preset.bg;
+    const chipFontSize = preset.text.length >= 3 ? '26cqi' : '40cqi';
+    chip.innerHTML = `<span class="preset-chip-text" style="color:${preset.fg};font-size:${chipFontSize}">${preset.text}</span>`;
+
+    chip.addEventListener('click', () => {
+      textEl.value = preset.text;
+      bgColor.value = preset.bg;
+      fgColor.value = preset.fg;
+      if (activeChip) activeChip.classList.remove('active');
+      chip.classList.add('active');
+      activeChip = chip;
+      if (activeColorChip) activeColorChip.classList.remove('active');
+      activeColorChip = null;
+      update();
+    });
+
+    presetsGrid.appendChild(chip);
+    if (i === 0) activeChip = chip;
+  });
+
+  // Deactivate active chips on manual edit
+  [textEl, bgColor, fgColor].forEach(el => el.addEventListener('input', () => {
+    if (activeChip) activeChip.classList.remove('active');
+    activeChip = null;
+    if (activeColorChip) activeColorChip.classList.remove('active');
+    activeColorChip = null;
+  }));
 
   [textEl, bgColor, fgColor, fontSizeEl].forEach(el => el.addEventListener('input', update));
 
