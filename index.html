@@ -252,6 +252,31 @@
       letter-spacing: 0.04em;
     }
 
+    /* Random button */
+    .random-btn {
+      background: transparent;
+      border: 1px solid var(--border-mid);
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 9px;
+      font-weight: 400;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: border-color 0.12s, color 0.12s;
+      line-height: 1.4;
+    }
+
+    .random-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .random-btn:active {
+      transform: scale(0.95);
+    }
+
     /* Color palettes */
     .color-palettes-grid {
       display: grid;
@@ -495,7 +520,10 @@
   <div class="controls">
 
     <div class="control-group">
-      <span class="control-label">Colors</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span class="control-label">Colors</span>
+        <button class="random-btn" id="random-btn">&#x2B22; Random</button>
+      </div>
       <div class="color-palettes-grid" id="color-palettes-grid"></div>
     </div>
 
@@ -625,6 +653,7 @@
   const fgSwatch   = document.getElementById('fg-swatch');
   const fgHex      = document.getElementById('fg-hex');
   const dlBtn      = document.getElementById('download');
+  const randomBtn  = document.getElementById('random-btn');
 
   canvas.width  = SIZE;
   canvas.height = SIZE;
@@ -729,6 +758,38 @@
   }));
 
   [textEl, bgColor, fgColor, fontSizeEl].forEach(el => el.addEventListener('input', update));
+
+  function hslToHex(h, s, l) {
+    s /= 100; l /= 100;
+    const a = s * Math.min(l, 1 - l);
+    const f = n => {
+      const k = (n + h / 30) % 12;
+      const c = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+      return Math.round(255 * c).toString(16).padStart(2, '0');
+    };
+    return `#${f(0)}${f(8)}${f(4)}`;
+  }
+
+  function randomPleasantColors() {
+    const bgHue   = Math.random() * 360;
+    const bgSat   = 45 + Math.random() * 35;
+    const bgLight = 20 + Math.random() * 45;
+    const fgHue   = Math.random() * 360;
+    const fgLight = bgLight < 45 ? 78 + Math.random() * 17 : 5 + Math.random() * 17;
+    const fgSat   = 20 + Math.random() * 60;
+    return { bg: hslToHex(bgHue, bgSat, bgLight), fg: hslToHex(fgHue, fgSat, fgLight) };
+  }
+
+  randomBtn.addEventListener('click', () => {
+    const { bg, fg } = randomPleasantColors();
+    bgColor.value = bg;
+    fgColor.value = fg;
+    if (activeColorChip) activeColorChip.classList.remove('active');
+    activeColorChip = null;
+    if (activeChip) activeChip.classList.remove('active');
+    activeChip = null;
+    update();
+  });
 
   dlBtn.addEventListener('click', () => {
     const name = (textEl.value || 'js').toLowerCase().replace(/\s+/g, '-');
