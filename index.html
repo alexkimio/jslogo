@@ -169,15 +169,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      background: var(--surface);
-      border: 1px solid var(--border-mid);
-      padding: 9px 12px;
-      transition: border-color 0.12s;
       width: 100%;
-    }
-
-    .color-row:focus-within {
-      border-color: var(--accent);
     }
 
     .swatch-wrap {
@@ -425,7 +417,6 @@
       position: relative;
     }
 
-    /* Crosshair corner marks */
     .canvas-frame::before,
     .canvas-frame::after {
       content: '';
@@ -569,10 +560,6 @@
       .random-btn {
         padding: 8px 12px;
         touch-action: manipulation;
-      }
-
-      .color-row {
-        padding: 12px 14px;
       }
 
       .swatch-wrap .swatch {
